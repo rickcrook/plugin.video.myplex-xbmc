@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="plugin.video.myplex-xbmc"
+       name="MyPlex"
+       version="0.0.2"
+       provider-name="Rick Crook">
+  <requires>
+    <import addon="xbmc.python" version="2.0"/>
+  </requires>
+  <extension point="xbmc.python.pluginsource" library="default.py">
+        <provides>video</provides>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <platform>all</platform>
+    <summary lang="en">XBMC Addon for MyPlex</summary>
+    <description lang="en">MyPlex is a platform for sharing media between Plex Media Servers. This is a third-party add-on, which uses public web services exposed by MyPlex. Neither the XBMC community, nor the developers of this add-on is in any way affiliated with Plex.</description>
+  </extension>
+</addon>

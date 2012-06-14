@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<settings>
+<category label="MyPlex">
+	<setting label="23" id="username" type="text" enable="true"/>
+	<setting label="24" id="password" option="hidden" type="text" enable="true"/>
+</category>
+</settings>

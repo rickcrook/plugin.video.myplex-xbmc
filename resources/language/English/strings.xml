@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<strings>
+	<!-- * Common Strings -->
+	<string id="10">Servers</string>
+		    
+	<!-- * Script Settings -->
+    <string id="22">Logon on MyPlex</string>
+    <string id="23">Email</string>
+    <string id="24">Password</string>
+
+	<!-- * Messages -->
+	<string id="31">Login Failed</string>
+  <string id="32">Please check login details and network connection.</string>
+</strings>

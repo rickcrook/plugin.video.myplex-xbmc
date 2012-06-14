@@ -1,0 +1,5 @@
+0.0.2- client login
+
+
+0.0.1
+- Initial build with minimum functionality to view Movies 
