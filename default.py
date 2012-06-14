@@ -177,7 +177,3 @@ elif mode == MODE_VIDEO_PLAY:
     play_video(permalink)
 # @feature: add Music, Pictures, TV Shows, My Plex Queue, Watched and Unwatched modes
     
-''' TO DO
-no network - notification
-login
-'''

@@ -161,8 +161,7 @@ class MyPlexClient(object):
       document = urllib2.urlopen(url)
     except:
       self._info('_getServers.ERROR.failed to connect to myPlex server')
-      filename = "C:\Users\Richard Crook\AppData\Roaming\XBMC\servers.xml"
-      document = open(filename)
+      return listing
       
     dom = xml.dom.minidom.parse(document)
         
@@ -188,8 +187,7 @@ class MyPlexClient(object):
       document = urllib2.urlopen(url)
     except:
       self._info('_getSections.ERROR.failed to connect to myPlex server')
-      filename = "C:\Users\Richard Crook\AppData\Roaming\XBMC\sections.xml"
-      document = open(filename)
+      return listing
       
     dom = xml.dom.minidom.parse(document)
         
@@ -221,8 +219,7 @@ class MyPlexClient(object):
       document = urllib2.urlopen(url)
     except:
       self._info('_getVideos.ERROR.failed to connect to myPlex server') 
-      filename = "C:\Users\Richard Crook\AppData\Roaming\XBMC\media.xml"
-      document = open(filename)
+      return listing
     
     dom = xml.dom.minidom.parse(document)
     #token = str(url).partition('?X-Plex-Token=')[2]
