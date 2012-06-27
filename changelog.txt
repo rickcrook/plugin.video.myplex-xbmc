@@ -1,2 +1,3 @@
-0.0.1
-- Initial build with minimum functionality to view Movies 
+0.1.0 - Added ability to explore TV sections and Playlists
+0.0.1 - Initial build with minimum functionality to view Movies 
+

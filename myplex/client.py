@@ -4,7 +4,7 @@
     @author     : Rick Crook
     @copyright  : 2012, Rick Crook 
     @thanks     : to Zsolt Torok for his example SoundCloud client
-    @version    : 0.01
+    @version    : 0.1.0
 
     @license    : Gnu General Public License - see LICENSE.TXT
     @description: myPlex client library
@@ -37,16 +37,13 @@ import xml.dom.minidom
 _PLEX_SERVERS_URL = 'https://my.plexapp.com/pms/servers.xml'
 _PLEX_SECTIONS_URL = 'https://my.plexapp.com/pms/system/library/sections'
 _PLEX_SIGNIN_URL = 'https://my.plexapp.com/users/sign_in.xml'
-# https://my.plexapp.com/pms/playlists?X-Plex-Token=<Hash> 
-# https://my.plexapp.com/pms/playlists/queue?X-Plex-Token=<Hash> 
-# https://my.plexapp.com/pms/playlists/queue/unwatched?X-Plex-Token=<Hash> 
-# https://my.plexapp.com/pms/playlists/queue/watched?X-Plex-Token=<Hash>
+_PLEX_PLAYLIST_URL = 'https://my.plexapp.com/pms/playlists'
 
 _X_PLEX_PLATFORM = 'XBMC'
 _X_PLEX_PLATFORM_VERSION = 'Unknown'
 _X_PLEX_PROVIDES = 'player'
 _X_PLEX_PRODUCT = 'plugin.video.myplex-xbmc'
-_X_PLEX_VERSION = '0.0.1'
+_X_PLEX_VERSION = '0.0.2'
 _X_PLEX_DEVICE = 'Unknown'
 _X_PLEX_CLIENT_IDENTIFIER = 'Unknown'
 
@@ -57,6 +54,8 @@ _URL ='pmsurl'
 _SERVER = 'pmsserver'
 _TOKEN = 'pmstoken'
 _HOST = 'pmshost'
+_PLAYABLE = 'xbmcplayable'
+_FOLDER = 'xbmcfolder'
 
 class MyPlexClient(object):
   # MyPlex client to handle all communication with the MyPlex REST API.
@@ -196,14 +195,131 @@ class MyPlexClient(object):
       if server == section.getAttribute("serverName"):
         # http://<host>:<port>/library/sections/<sectionid>/all?X-Plex-Token=<accessToken> 
         serverToken = section.getAttribute("accessToken")
-        url = section.getAttribute("key") + '/all?X-Plex-Token=' + serverToken
+        url = section.getAttribute("key") + '?X-Plex-Token=' + serverToken
         title = section.getAttribute("title") 
         host = section.getAttribute("host") + ':' + section.getAttribute("port")
         self._info(('Appending section: %s') % url)
-        listing.append({ _TITLE: title, _URL: url, _HOST: host, _TOKEN: serverToken })
+        listing.append({ _TITLE: title, _URL: url, _SERVER: host, _TOKEN: serverToken })
     return listing
   
   # @feature: add Music, Pictures, TV Shows and MyPlex Queue, Watched and Unwatched
+  
+  def getPlayLists(self):
+    '''
+      Return PMS playlist as a list
+      @access public
+      @return list
+    '''
+    listing = []
+    url = _PLEX_PLAYLIST_URL + '?X-Plex-Token=' + self.token
+    preKey = _PLEX_PLAYLIST_URL
+    postKey = '?X-Plex-Token=' + self.token
+    dom = self._getDom(url)
+    listing = self._getDirectory(dom,preKey,postKey)
+    return listing
+  
+  def getList(self,url):
+    '''
+      Return a list of videos or directories from url
+      @access public
+      @return list
+    '''
+    listing = []
+    print url
+    preKey = str(url).partition('?')[0]
+    postKey = '?X-Plex-Token=' + self.token
+    dom = self._getDom(url)
+    listing = self._getDirectory(dom,preKey,postKey)
+    if listing ==[]:
+      self._info('_getList.No directory, looking for Media')
+      listing = self._getMedia(dom,preKey,postKey)
+    
+    if listing ==[]:
+      self._info('_getList.No Media, creating link to home')
+      attributes = {'title': 'MyPlex home', _URL: '', _TOKEN:self.token, _PLAYABLE:False, _FOLDER:True}
+      listing.append(attributes)
+    
+    return listing
+  
+  def _getDirectory(self,dom,preKey,postKey):
+    '''
+      Return a list of directories from dom
+      @access private
+      @return list
+    '''
+    listing = []
+    
+    self._info('_getDirectory.parsing dom')
+    #dom = self._getDom(url)
+    dirs = dom.getElementsByTagName("Directory")
+    
+    for dir in dirs: 
+      attributeNames = ['ratingKey','key','studio','type','title','contentRating','summary','index','rating','year','thumb','art','banner','theme','duration','originallyAvailableAt','leafCount','viewedLeafCount','addedAt','updatedAt']
+      attributes = self._getAttributes(attributeNames,dir)
+      if ('/library' in str(attributes['key'])):
+        url = preKey.partition('/library')[0] + attributes['key'] + postKey
+      elif ('http' in str(attributes['key'])):
+        url = attributes['key'] + postKey
+      elif str(attributes['key'])[0] == '/':
+        url = preKey + attributes['key'] + postKey
+      else:
+        url = preKey + '/' + attributes['key'] + postKey
+        
+      self._info(('Appending dir: %s') % url)
+      attributes.update({_URL: url, _TOKEN:self.token, _PLAYABLE:False, _FOLDER:True})
+      listing.append(attributes)
+    return listing
+    
+  def _getMedia(self,dom,preKey,postKey):
+    '''
+      Return a list of media from dom
+      @access private
+      @return list
+    '''
+    listing = []
+    
+    self._info('_getMedia.parsing dom')   
+    videos = dom.getElementsByTagName("Video")
+    for video in videos:
+      attributeNames = ['studio','type','title','contentRating','summary','rating','year','thumb','art','duration','originallyAvailableAt']
+      attributes = self._getAttributes(attributeNames,video)
+      medias = video.getElementsByTagName("Media")
+      for media in medias:
+        attributeNames = ['bitrate','width','height','aspectRatio','audioChannels','audioCodec','videoCodec','videoResolution','container','videoFrameRate','optimizedForStreaming']
+        attributes.update(self._getAttributes(attributeNames,media))
+        parts = media.getElementsByTagName("Part")
+        for part in parts:
+          attributeNames = ['key','size']
+          attributes.update(self._getAttributes(attributeNames,part))
+          if ('/library' in str(attributes['key'])):
+            url = preKey.partition('/library')[0] + attributes['key'] + postKey
+          elif ('http' in str(attributes['key'])):
+            url = attributes['key'] + postKey
+          elif str(attributes['key'])[0] == '/':
+            url = preKey + attributes['key'] + postKey
+          else:
+            url = preKey + '/' + attributes['key'] + postKey
+          self._info(('Appending video: %s.') % url)
+          #attributes.update({ VIDEO_TITLE: title, VIDEO_STREAM_URL: url})
+          attributes.update({_URL: url, _TOKEN:self.token, _PLAYABLE:True, _FOLDER:False})
+          listing.append(attributes)
+    return listing
+  
+  def _getDom(self,url):
+    '''
+      Return a dom from a parsed XML file downloaded from URL
+      @private
+      @return dom of parsed XML
+    '''
+    try:
+      document = urllib2.urlopen(url)
+    except:
+      self._info('_getDom.ERROR.failed to connect to myPlex server')
+      raise
+      
+    dom = xml.dom.minidom.parse(document)
+    
+    return dom
   
   #Videos
   def get_videos(self, url):
@@ -228,15 +344,34 @@ class MyPlexClient(object):
     videos = dom.getElementsByTagName("Video")
     for video in videos:
       title = video.getAttribute("title")
+      attributes = ['studio','type','title','contentRating','summary','rating','year','thumb','art','duration','originallyAvailableAt']
+      attributesDict = self._getAttributes(attributes,video)
       medias = video.getElementsByTagName("Media")
       for media in medias:
+        attributes = ['bitrate','width','height','aspectRatio','audioChannels','audioCodec','videoCodec','videoResolution','container','videoFrameRate','optimizedForStreaming']
+        attributesDict.update(self._getAttributes(attributes,media))
         parts = media.getElementsByTagName("Part")
         for part in parts:
+          attributes = ['key','size']
+          attributesDict.update(self._getAttributes(attributes,part))
           # http://<host>:<port><key>?X-Plex-Token=<accessToken>
           videoUrl = host + part.getAttribute("key") + '?X-Plex-Token=' + self.token
           self._info(('Appending video: %s.') % videoUrl)
-          listing.append({ VIDEO_TITLE: title, VIDEO_STREAM_URL: videoUrl })
+          attributesDict.update({ VIDEO_TITLE: title, VIDEO_STREAM_URL: videoUrl })
+          listing.append(attributesDict)
     return listing
+  
+  def _getAttributes(self,attributes, node):
+    '''
+      Returns a dict of attributes
+      @access private
+    '''
+    dict = {}
+    for attribute in attributes:
+      nodeText = node.getAttribute(attribute)
+      dict[attribute] = nodeText
+    
+    return dict
   
   def _info(self,msg):
     '''
@@ -244,3 +379,5 @@ class MyPlexClient(object):
       @access private
     '''
     print 'MyPlexClient.' + msg
+
+

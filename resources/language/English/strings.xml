@@ -2,6 +2,7 @@
 <strings>
 	<!-- * Common Strings -->
 	<string id="10">Servers</string>
+  <string id="11">Playlists</string>
 		    
 	<!-- * Script Settings -->
     <string id="22">Logon on MyPlex</string>
