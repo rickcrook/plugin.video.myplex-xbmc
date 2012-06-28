@@ -5,7 +5,7 @@
     @author     : Rick Crook
     @copyright  : 2012, Rick Crook 
     @thanks     : to Zsolt Torok for his example SoundCloud add-on
-    @version    : 0.1.0
+    @version    : 0.1.1
 
     @license    : Gnu General Public License - see LICENSE.TXT
     @description: myPlex XBMC add-on
@@ -132,7 +132,7 @@ def showDirectory(directory, parameters={}):
     else:
       nextMode = MODE_DIRECTORY
       
-    dirParameters = {PARAMETER_KEY_MODE: nextMode, PARAMETER_KEY_URL: PLUGIN_URL + "directory/" + dirTitle, PARAMETER_KEY_PERMALINK: dirURL, PARAMETER_KEY_TOKEN: dirToken}
+    dirParameters = {PARAMETER_KEY_MODE: nextMode, PARAMETER_KEY_URL: PLUGIN_URL + "directory/" + dirTitle.encode('ascii', 'ignore'), PARAMETER_KEY_PERMALINK: dirURL, PARAMETER_KEY_TOKEN: dirToken}
     url = sys.argv[0] + '?' + urllib.urlencode(dirParameters)
     ok = xbmcplugin.addDirectoryItem(handle, url=url, listitem=li, isFolder=dir[myplex._FOLDER])
   return xbmcplugin.endOfDirectory(handle=handle, succeeded=True)
